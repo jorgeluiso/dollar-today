@@ -1,0 +1,13 @@
+{
+  "name": "dollar-today",
+  "version": "1.0.0",
+  "description": "Polls Venezuelan exchange rates (BCV & Binance P2P) and exposes them as JSON",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "ioredis": "^5.4.1"
+  }
+}
