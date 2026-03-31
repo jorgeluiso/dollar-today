@@ -47,7 +47,3 @@ The API will be available at `http://localhost:3051`.
 | `REDIS_PORT` | `6379`      | Redis port          |
 | `PORT`       | `3051`      | HTTP server port    |
 | `HOST`       | —           | Public hostname     |
-
-## Deployment
-
-The Docker container is designed to be exposed via Cloudflare Tunnel pointing to `ves.vzlabnb.com`.
