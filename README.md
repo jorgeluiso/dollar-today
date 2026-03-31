@@ -11,15 +11,16 @@ A lightweight Node.js service that polls Venezuelan Bolivar (VES) to USD exchang
 
 - Rates are polled every **6 hours** and stored in Redis with a **30-day TTL**
 - On startup, rates are fetched immediately
-- The API exposes the latest rates at `/`
+- `GET /` — Human-readable HTML page with the latest rates
+- `GET /json` — JSON API endpoint
 
 ## API
 
-```
-GET /
-```
+### `GET /`
 
-Response:
+Returns a styled HTML page displaying the current exchange rates.
+
+### `GET /json`
 
 ```json
 {

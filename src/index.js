@@ -47,8 +47,22 @@ async function pollRates() {
 }
 
 const app = express();
+const { renderHTML } = require("./view");
 
 app.get("/", async (_req, res) => {
+  try {
+    const data = await redis.get("rate:latest");
+    if (!data) {
+      return res.status(503).send("No rate data available yet");
+    }
+    res.type("html").send(renderHTML(JSON.parse(data)));
+  } catch (err) {
+    console.error("Error reading from Redis:", err);
+    res.status(500).send("Internal server error");
+  }
+});
+
+app.get("/json", async (_req, res) => {
   try {
     const data = await redis.get("rate:latest");
     if (!data) {
