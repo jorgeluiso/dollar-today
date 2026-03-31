@@ -1,3 +1,12 @@
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const m = sorted.length % 2 !== 0
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
+  return parseFloat(m.toFixed(2));
+}
+
 async function fetchBCVRate() {
   const res = await fetch("https://bcv-api.rafnixg.dev/rates/");
   if (!res.ok) throw new Error(`BCV API returned ${res.status}`);
@@ -22,7 +31,7 @@ async function fetchBinanceP2PRate() {
         page: 1,
         payTypes: [],
         publisherType: null,
-        rows: 10,
+        rows: 20,
         tradeType: "BUY",
       }),
     }
@@ -32,8 +41,7 @@ async function fetchBinanceP2PRate() {
   const data = await res.json();
   const prices = data.data.map((item) => parseFloat(item.adv.price));
   if (prices.length === 0) throw new Error("No Binance P2P ads returned");
-  const avg = prices.reduce((sum, p) => sum + p, 0) / prices.length;
-  return parseFloat(avg.toFixed(2));
+  return median(prices);
 }
 
 module.exports = { fetchBCVRate, fetchBinanceP2PRate };
