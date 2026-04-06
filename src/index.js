@@ -3,7 +3,7 @@ const Redis = require("ioredis");
 const { fetchBCVRate, fetchBinanceP2PRate } = require("./rates");
 
 const REDIS_HOST = process.env.REDIS_HOST || "localhost";
-const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379", 10);
+const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6380", 10);
 const PORT = parseInt(process.env.PORT || "3051", 10);
 const POLL_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days

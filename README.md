@@ -39,12 +39,13 @@ docker compose up -d
 ```
 
 The API will be available at `http://localhost:3051`.
+This stack also starts its own Redis instance on `localhost:6380` by default so it does not share the default Redis port with other local projects.
 
 ## Environment variables
 
 | Variable     | Default     | Description         |
 | ------------ | ----------- | ------------------- |
 | `REDIS_HOST` | `localhost` | Redis host          |
-| `REDIS_PORT` | `6379`      | Redis port          |
+| `REDIS_PORT` | `6380`      | Redis port          |
 | `PORT`       | `3051`      | HTTP server port    |
 | `HOST`       | —           | Public hostname     |
