@@ -8,7 +8,7 @@
     "dev:tunnel": "source .env && ssh -L $REDIS_PORT:localhost:$REDIS_PORT $SSH_USER@$SSH_HOST"
   },
   "dependencies": {
-    "express": "^4.21.0",
-    "ioredis": "^5.4.1"
+    "express": "^5.2.1",
+    "ioredis": "^5.10.1"
   }
 }
