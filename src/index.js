@@ -13,6 +13,14 @@ const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
 async function pollRates() {
   console.log(`[${new Date().toISOString()}] Polling exchange rates...`);
 
+  let latestEntry = null;
+  try {
+    const lastData = await redis.get("rate:latest");
+    if (lastData) latestEntry = JSON.parse(lastData);
+  } catch (err) {
+    console.error("  Failed to fetch latest rate for fallback:", err.message);
+  }
+
   const [bcvRate, binanceRate] = await Promise.allSettled([
     fetchBCVRate(),
     fetchBinanceP2PRate(),
@@ -26,6 +34,10 @@ async function pollRates() {
     console.log(`  BCV rate: ${bcvRate.value}`);
   } else {
     console.error("  BCV rate fetch failed:", bcvRate.reason || "null value");
+    if (latestEntry && latestEntry["bcv-rate"]) {
+      entry["bcv-rate"] = latestEntry["bcv-rate"];
+      console.log(`  Using fallback BCV rate: ${entry["bcv-rate"]}`);
+    }
   }
 
   if (binanceRate.status === "fulfilled" && binanceRate.value != null) {
@@ -36,6 +48,10 @@ async function pollRates() {
       "  Binance P2P rate fetch failed:",
       binanceRate.reason || "null value"
     );
+    if (latestEntry && latestEntry["binance-p2p-rate"]) {
+      entry["binance-p2p-rate"] = latestEntry["binance-p2p-rate"];
+      console.log(`  Using fallback Binance P2P rate: ${entry["binance-p2p-rate"]}`);
+    }
   }
 
   if (entry["bcv-rate"] || entry["binance-p2p-rate"]) {

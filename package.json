@@ -4,7 +4,8 @@
   "description": "Polls Venezuelan exchange rates (BCV & Binance P2P) and exposes them as JSON",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "dev:tunnel": "source .env && ssh -L $REDIS_PORT:localhost:$REDIS_PORT $SSH_USER@$SSH_HOST"
   },
   "dependencies": {
     "express": "^4.21.0",
