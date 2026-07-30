@@ -5,6 +5,10 @@ function renderHTML(data) {
   const dayName = DAYS[date.getUTCDay()];
   const bcv = data["bcv-rate"] != null ? data["bcv-rate"].toFixed(2) : "—";
   const binance = data["binance-p2p-rate"] != null ? data["binance-p2p-rate"].toFixed(2) : "—";
+  const staleNote = (key) =>
+    data[`${key}-stale`]
+      ? `<span class="font-headline tracking-[0.3em] uppercase text-[0.6rem] opacity-50 mt-4">Stale — ${data[`${key}-fetched-at`].slice(0, 10)}</span>`
+      : "";
 
   return `<!DOCTYPE html>
 <html class="light" lang="en"><head>
@@ -52,10 +56,12 @@ function renderHTML(data) {
 <!-- BCV Rate -->
 <div class="flex flex-col items-center">
 <h1 class="font-headline font-bold text-8xl md:text-[10rem] tracking-tighter leading-none">${bcv}</h1>
+${staleNote("bcv-rate")}
 </div>
 <!-- Binance P2P Rate -->
 <div class="flex flex-col items-center">
 <h1 class="font-headline font-bold text-8xl md:text-[10rem] tracking-tighter leading-none">${binance}</h1>
+${staleNote("binance-p2p-rate")}
 </div>
 </section>
 </main>

@@ -8,10 +8,15 @@ function median(values) {
 }
 
 async function fetchBCVRate() {
-  const res = await fetch("https://bcv-api.rafnixg.dev/rates/");
+  const res = await fetch("https://dolarflow.com/api/oficial/");
   if (!res.ok) throw new Error(`BCV API returned ${res.status}`);
   const data = await res.json();
-  return parseFloat(data.dollar);
+  if (!data.exito) throw new Error("BCV API reported failure");
+  const rate = parseFloat(data.precio);
+  if (!Number.isFinite(rate) || rate <= 0) {
+    throw new Error(`BCV API returned invalid rate: ${data.precio}`);
+  }
+  return rate;
 }
 
 async function fetchBinanceP2PRate() {
