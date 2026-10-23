@@ -8,7 +8,9 @@ function median(values) {
 }
 
 async function fetchBCVRate() {
-  const res = await fetch("https://dolarflow.com/api/oficial/");
+  const res = await fetch("https://dolarflow.com/api/oficial/", {
+    signal: AbortSignal.timeout(15_000),
+  });
   if (!res.ok) throw new Error(`BCV API returned ${res.status}`);
   const data = await res.json();
   if (!data.exito) throw new Error("BCV API reported failure");
@@ -24,6 +26,7 @@ async function fetchBinanceP2PRate() {
     "https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search",
     {
       method: "POST",
+      signal: AbortSignal.timeout(15_000),
       headers: {
         "Content-Type": "application/json",
         "User-Agent":

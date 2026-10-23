@@ -51,6 +51,13 @@ docker compose up -d
 
 The API will be available at `http://localhost:3051`.
 This stack also starts its own Redis instance on `localhost:6380` by default so it does not share the default Redis port with other local projects.
+The app uses public DNS resolvers for upstream requests while Docker still resolves
+the internal `redis` service. This avoids inheriting host-only Tailscale DNS
+servers that can return `SERVFAIL` inside the container.
+
+The runtime is Node.js 24. Upstream requests time out after 15 seconds so one
+unresponsive source cannot indefinitely block saving the other source's rate.
+The Redis client retains RESP2 for compatibility with the existing cache commands.
 
 ## Environment variables
 

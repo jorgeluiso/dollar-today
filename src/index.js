@@ -11,7 +11,7 @@ const TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
 const MAX_STALE_DAYS = parseFloat(process.env.MAX_STALE_DAYS || "3");
 const MAX_STALE_MS = MAX_STALE_DAYS * 24 * 60 * 60 * 1000;
 
-const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT });
+const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT, protocol: 2 });
 
 // Copies a rate into `entry`: the fresh value on success, otherwise the last
 // cached one — but only while its last successful fetch is within MAX_STALE_DAYS,

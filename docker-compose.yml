@@ -1,6 +1,10 @@
 services:
   app:
     build: .
+    # Avoid inheriting host-only Tailscale resolvers, which fail in this bridge.
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
     ports:
       - "3051:3051"
     environment:
