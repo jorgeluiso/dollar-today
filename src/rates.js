@@ -1,3 +1,8 @@
+function parseRate(value) {
+  if (typeof value !== "number" && typeof value !== "string") return NaN;
+  return Number(value);
+}
+
 function median(values) {
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
@@ -14,7 +19,7 @@ async function fetchBCVRate() {
   if (!res.ok) throw new Error(`BCV API returned ${res.status}`);
   const data = await res.json();
   if (!data.exito) throw new Error("BCV API reported failure");
-  const rate = parseFloat(data.precio);
+  const rate = parseRate(data.precio);
   if (!Number.isFinite(rate) || rate <= 0) {
     throw new Error(`BCV API returned invalid rate: ${data.precio}`);
   }
@@ -47,8 +52,13 @@ async function fetchBinanceP2PRate() {
 
   if (!res.ok) throw new Error(`Binance P2P API returned ${res.status}`);
   const data = await res.json();
-  const prices = data.data.map((item) => parseFloat(item.adv.price));
-  if (prices.length === 0) throw new Error("No Binance P2P ads returned");
+  if (data.success === false || !Array.isArray(data.data)) {
+    throw new Error("Binance P2P API reported failure");
+  }
+  const prices = data.data
+    .map((item) => parseRate(item?.adv?.price))
+    .filter((price) => Number.isFinite(price) && price > 0);
+  if (prices.length === 0) throw new Error("No valid Binance P2P ads returned");
   return median(prices);
 }
 

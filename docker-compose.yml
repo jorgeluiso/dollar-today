@@ -18,10 +18,12 @@ services:
       interval: 600s
       timeout: 5s
       retries: 3
+      start_period: 30s
+      start_interval: 5s
     restart: unless-stopped
 
   redis:
-    image: redis:8-alpine
+    image: redis:8.10.2-alpine
     command: ["redis-server", "--appendonly", "yes", "--port", "6380"]
     ports:
       - "6380:6380"

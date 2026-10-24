@@ -2,11 +2,13 @@
 
 A lightweight Bun service that polls Venezuelan Bolivar (VES) to USD exchange rates from multiple sources, stores them in Redis, and exposes them as a JSON API.
 It uses `Bun.serve` and Bun's native `RedisClient`, with no npm dependencies.
+The HTML page uses plain CSS with no browser JavaScript. Google Fonts provides
+the optional typefaces, with local sans-serif fallbacks if it is unavailable.
 
 ## Sources
 
 - **BCV (Banco Central de Venezuela)** — Official rate via [dolarflow.com](https://dolarflow.com/api/oficial/)
-- **Binance P2P** — Average VES/USDT buy price from merchant ads
+- **Binance P2P** — Median VES/USDT buy price from merchant ads
 
 ## How it works
 
@@ -42,7 +44,9 @@ A rate being served from cache after its source failed also carries
 `"<rate>-stale": true`, and its `-fetched-at` stays pinned to the last successful
 fetch.
 
-Returns `503` if no rate data has been fetched yet.
+Returns `503` if no usable rate data is available, including when both rates
+are older than `MAX_STALE_DAYS`. Expiry is checked on every request, and an
+unsuccessful poll clears the latest cache when neither rate can be retained.
 
 ## Running with Docker
 
@@ -58,7 +62,7 @@ servers that can return `SERVFAIL` inside the container.
 
 The runtime is Bun 1.4.4. Upstream requests time out after 15 seconds so one
 unresponsive source cannot indefinitely block saving the other source's rate.
-The native Redis client uses the existing cache keys and 30-day expiry. Redis 8
+The native Redis client uses the existing cache keys and 30-day expiry. Redis 8.10.2
 is included in the Docker stack; external Redis instances must be version 7.2 or newer.
 
 ## Running locally
@@ -78,6 +82,10 @@ configure `SSH_USER`, `SSH_HOST`, and `REDIS_PORT` in `.env`, then run
 No package installation is needed locally or in Docker. If npm dependencies are
 added in the future, commit the generated `bun.lock` and add a frozen installation
 step to the Dockerfile.
+
+Run `bun test` to check rate validation and cache-age rules without Redis or
+network access. The Docker health check begins during startup and then runs
+every ten minutes.
 
 ## Environment variables
 

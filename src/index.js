@@ -1,5 +1,6 @@
 const { RedisClient } = require("bun");
 const { fetchBCVRate, fetchBinanceP2PRate } = require("./rates");
+const { hasRates, pruneExpiredRates } = require("./cache");
 
 const REDIS_HOST = process.env.REDIS_HOST || "localhost";
 const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6380", 10);
@@ -27,7 +28,7 @@ async function readLatestRate() {
 function applyRate(entry, key, result, latestEntry, nowISO) {
   const fetchedAtKey = `${key}-fetched-at`;
 
-  if (result.status === "fulfilled" && result.value != null) {
+  if (result.status === "fulfilled" && Number.isFinite(result.value) && result.value > 0) {
     entry[key] = result.value;
     entry[fetchedAtKey] = nowISO;
     console.log(`  ${key}: ${result.value}`);
@@ -77,11 +78,13 @@ async function pollRates() {
   applyRate(entry, "bcv-rate", bcvRate, latestEntry, nowISO);
   applyRate(entry, "binance-p2p-rate", binanceRate, latestEntry, nowISO);
 
-  if (entry["bcv-rate"] || entry["binance-p2p-rate"]) {
+  if (hasRates(entry)) {
     const key = `rate:${now}`;
     await redis.set(key, JSON.stringify(entry), "EX", TTL_SECONDS);
     await redis.set("rate:latest", JSON.stringify(entry), "EX", TTL_SECONDS);
     console.log(`  Stored under ${key}`);
+  } else {
+    await redis.del("rate:latest");
   }
 }
 
@@ -106,12 +109,12 @@ Bun.serve({
 
     try {
       const data = await readLatestRate();
-      if (!data) {
+      const entry = data ? pruneExpiredRates(JSON.parse(data), MAX_STALE_MS) : null;
+      if (!entry || !hasRates(entry)) {
         return isJSON
           ? Response.json({ error: "No rate data available yet" }, { status: 503 })
           : new Response("No rate data available yet", { status: 503 });
       }
-      const entry = JSON.parse(data);
       return isJSON
         ? Response.json(entry)
         : new Response(renderHTML(entry), {
