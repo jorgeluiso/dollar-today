@@ -10,9 +10,5 @@
   "scripts": {
     "start": "bun src/index.js",
     "dev:tunnel": "ssh -L $REDIS_PORT:localhost:$REDIS_PORT $SSH_USER@$SSH_HOST"
-  },
-  "dependencies": {
-    "express": "^5.3.0",
-    "ioredis": "^6.0.0"
   }
 }

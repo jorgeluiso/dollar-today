@@ -1,5 +1,4 @@
-const express = require("express");
-const Redis = require("ioredis");
+const { RedisClient } = require("bun");
 const { fetchBCVRate, fetchBinanceP2PRate } = require("./rates");
 
 const REDIS_HOST = process.env.REDIS_HOST || "localhost";
@@ -11,7 +10,16 @@ const TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
 const MAX_STALE_DAYS = parseFloat(process.env.MAX_STALE_DAYS || "3");
 const MAX_STALE_MS = MAX_STALE_DAYS * 24 * 60 * 60 * 1000;
 
-const redis = new Redis({ host: REDIS_HOST, port: REDIS_PORT, protocol: 2 });
+const redis = new RedisClient(`redis://${REDIS_HOST}:${REDIS_PORT}`, {
+  connectionTimeout: 5_000,
+  enableOfflineQueue: false,
+});
+
+async function readLatestRate() {
+  // Explicitly reconnect on a new request even if background retries ran out.
+  if (!redis.connected) await redis.connect();
+  return redis.get("rate:latest");
+}
 
 // Copies a rate into `entry`: the fresh value on success, otherwise the last
 // cached one — but only while its last successful fetch is within MAX_STALE_DAYS,
@@ -51,7 +59,7 @@ async function pollRates() {
 
   let latestEntry = null;
   try {
-    const lastData = await redis.get("rate:latest");
+    const lastData = await readLatestRate();
     if (lastData) latestEntry = JSON.parse(lastData);
   } catch (err) {
     console.error("  Failed to fetch latest rate for fallback:", err.message);
@@ -77,38 +85,52 @@ async function pollRates() {
   }
 }
 
-const app = express();
 const { renderHTML } = require("./view");
 
-app.get("/", async (_req, res) => {
-  try {
-    const data = await redis.get("rate:latest");
-    if (!data) {
-      return res.status(503).send("No rate data available yet");
+Bun.serve({
+  port: PORT,
+  development: false,
+  async fetch(req) {
+    const path = new URL(req.url).pathname.toLowerCase().replace(/\/$/, "") || "/";
+    const isJSON = path === "/json";
+    if (path !== "/" && !isJSON) {
+      return new Response("Not found", { status: 404 });
     }
-    res.type("html").send(renderHTML(JSON.parse(data)));
-  } catch (err) {
-    console.error("Error reading from Redis:", err);
-    res.status(500).send("Internal server error");
-  }
+
+    if (req.method === "OPTIONS") {
+      return new Response(null, { status: 200, headers: { Allow: "GET, HEAD" } });
+    }
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      return new Response("Not found", { status: 404 });
+    }
+
+    try {
+      const data = await readLatestRate();
+      if (!data) {
+        return isJSON
+          ? Response.json({ error: "No rate data available yet" }, { status: 503 })
+          : new Response("No rate data available yet", { status: 503 });
+      }
+      const entry = JSON.parse(data);
+      return isJSON
+        ? Response.json(entry)
+        : new Response(renderHTML(entry), {
+            headers: { "Content-Type": "text/html; charset=utf-8" },
+          });
+    } catch (err) {
+      console.error("Error reading from Redis:", err);
+      return isJSON
+        ? Response.json({ error: "Internal server error" }, { status: 500 })
+        : new Response("Internal server error", { status: 500 });
+    }
+  },
 });
 
-app.get("/json", async (_req, res) => {
-  try {
-    const data = await redis.get("rate:latest");
-    if (!data) {
-      return res.status(503).json({ error: "No rate data available yet" });
-    }
-    res.json(JSON.parse(data));
-  } catch (err) {
-    console.error("Error reading from Redis:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-  // Poll immediately on start, then every 6 hours
-  pollRates();
-  setInterval(pollRates, POLL_INTERVAL_MS);
-});
+console.log(`Server listening on port ${PORT}`);
+// Poll immediately on start, then every 6 hours. A Redis outage must not stop
+// the HTTP server or future polls.
+function runPoll() {
+  pollRates().catch((err) => console.error("Exchange rate poll failed:", err));
+}
+runPoll();
+setInterval(runPoll, POLL_INTERVAL_MS);
