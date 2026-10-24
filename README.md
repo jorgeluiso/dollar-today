@@ -1,6 +1,6 @@
 # dollar-today
 
-A lightweight Node.js service that polls Venezuelan Bolivar (VES) to USD exchange rates from multiple sources, stores them in Redis, and exposes them as a JSON API.
+A lightweight Bun service that polls Venezuelan Bolivar (VES) to USD exchange rates from multiple sources, stores them in Redis, and exposes them as a JSON API.
 
 ## Sources
 
@@ -46,7 +46,7 @@ Returns `503` if no rate data has been fetched yet.
 ## Running with Docker
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
 The API will be available at `http://localhost:3051`.
@@ -55,9 +55,27 @@ The app uses public DNS resolvers for upstream requests while Docker still resol
 the internal `redis` service. This avoids inheriting host-only Tailscale DNS
 servers that can return `SERVFAIL` inside the container.
 
-The runtime is Node.js 24. Upstream requests time out after 15 seconds so one
+The runtime is Bun 1.4.4. Upstream requests time out after 15 seconds so one
 unresponsive source cannot indefinitely block saving the other source's rate.
 The Redis client retains RESP2 for compatibility with the existing cache commands.
+
+## Running locally
+
+Install Bun 1.4.4 or newer, then run:
+
+```bash
+bun install --frozen-lockfile
+docker compose up -d redis
+bun run start
+```
+
+Bun loads `.env` automatically. Use `.env.example` as a starting point; the
+local Redis container listens on port 6380. To use a remote Redis instance,
+configure `SSH_USER`, `SSH_HOST`, and `REDIS_PORT` in `.env`, then run
+`bun run dev:tunnel` in another terminal.
+
+Commit `bun.lock` when changing dependencies. Docker installs production
+dependencies from this lockfile using `bun install --frozen-lockfile --production`.
 
 ## Environment variables
 

@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "description": "Polls Venezuelan exchange rates (BCV & Binance P2P) and exposes them as JSON",
   "main": "src/index.js",
+  "packageManager": "bun@1.4.4",
+  "engines": {
+    "bun": ">=1.4.4"
+  },
   "scripts": {
-    "start": "node src/index.js",
-    "dev:tunnel": "source .env && ssh -L $REDIS_PORT:localhost:$REDIS_PORT $SSH_USER@$SSH_HOST"
+    "start": "bun src/index.js",
+    "dev:tunnel": "ssh -L $REDIS_PORT:localhost:$REDIS_PORT $SSH_USER@$SSH_HOST"
   },
   "dependencies": {
     "express": "^5.3.0",
