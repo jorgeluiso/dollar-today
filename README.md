@@ -62,7 +62,7 @@ servers that can return `SERVFAIL` inside the container.
 
 The runtime is Bun 1.4.4. Upstream requests time out after 15 seconds so one
 unresponsive source cannot indefinitely block saving the other source's rate.
-The native Redis client uses the existing cache keys and 30-day expiry. Redis 8.10.2
+The native Redis client uses the existing cache keys and 30-day expiry. Redis 8.10.3
 is included in the Docker stack; external Redis instances must be version 7.2 or newer.
 
 ## Running locally

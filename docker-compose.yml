@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:8.10.2-alpine
+    image: redis:8.10.3-alpine
     command: ["redis-server", "--appendonly", "yes", "--port", "6380"]
     ports:
       - "6380:6380"
