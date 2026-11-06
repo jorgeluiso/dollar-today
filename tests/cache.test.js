@@ -32,6 +32,26 @@ describe("cached rate eligibility", () => {
     expect(hasRates(actual)).toBe(false);
   });
 
+  test("enforces the same age limit on the euro rate, including its metadata", () => {
+    const withEuro = {
+      date: entry.date,
+      "bcv-rate": 887.3,
+      "bcv-rate-fetched-at": new Date(now).toISOString(),
+      "bcv-euro-rate": 1000,
+      "bcv-euro-rate-fetched-at": new Date(now - maxAge - 1).toISOString(),
+      "bcv-euro-rate-stale": true,
+    };
+    const actual = pruneExpiredRates(withEuro, maxAge, now);
+    expect(actual["bcv-rate"]).toBe(887.3);
+    expect(actual).not.toHaveProperty("bcv-euro-rate");
+    expect(actual).not.toHaveProperty("bcv-euro-rate-fetched-at");
+    expect(actual).not.toHaveProperty("bcv-euro-rate-stale");
+  });
+
+  test("the euro rate alone cannot turn the API's 503 into a 200", () => {
+    expect(hasRates({ date: entry.date, "bcv-euro-rate": 1000 })).toBe(false);
+  });
+
   test.each([undefined, "invalid", new Date(now + 1).toISOString()])(
     "rejects missing, invalid or future fetch timestamps: %p", (timestamp) => {
       const actual = pruneExpiredRates({ ...entry, "bcv-rate-fetched-at": timestamp }, maxAge, now);

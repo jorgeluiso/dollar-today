@@ -1,7 +1,7 @@
 {
   "name": "dollar-today",
   "version": "1.0.0",
-  "description": "Polls Venezuelan exchange rates (BCV & Binance P2P) and exposes them as JSON",
+  "description": "Polls Venezuelan exchange rates (BCV, Tasa Euro & Binance P2P) and exposes them as JSON",
   "main": "src/index.js",
   "packageManager": "bun@1.4.4",
   "engines": {

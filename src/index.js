@@ -1,5 +1,5 @@
 const { RedisClient } = require("bun");
-const { fetchBCVRate, fetchBinanceP2PRate } = require("./rates");
+const { fetchBCVPage, fetchBCVRate, fetchBCVEuroRate, fetchBinanceP2PRate } = require("./rates");
 const { hasRates, pruneExpiredRates } = require("./cache");
 
 const REDIS_HOST = process.env.REDIS_HOST || "localhost";
@@ -66,9 +66,11 @@ async function pollRates() {
     console.error("  Failed to fetch latest rate for fallback:", err.message);
   }
 
-  const [bcvRate, binanceRate] = await Promise.allSettled([
-    fetchBCVRate(),
+  const bcvPage = fetchBCVPage();
+  const [bcvRate, binanceRate, bcvEuroRate] = await Promise.allSettled([
+    fetchBCVRate(bcvPage),
     fetchBinanceP2PRate(),
+    fetchBCVEuroRate(bcvPage),
   ]);
 
   const nowISO = new Date().toISOString();
@@ -77,6 +79,7 @@ async function pollRates() {
 
   applyRate(entry, "bcv-rate", bcvRate, latestEntry, nowISO);
   applyRate(entry, "binance-p2p-rate", binanceRate, latestEntry, nowISO);
+  applyRate(entry, "bcv-euro-rate", bcvEuroRate, latestEntry, nowISO);
 
   if (hasRates(entry)) {
     const key = `rate:${now}`;

@@ -1,7 +1,10 @@
-const RATE_KEYS = ["bcv-rate", "binance-p2p-rate"];
+const CORE_RATE_KEYS = ["bcv-rate", "binance-p2p-rate"];
+const RATE_KEYS = [...CORE_RATE_KEYS, "bcv-euro-rate"];
 
+// API contract: /json answers 503 when neither core rate is usable. The euro rate
+// is an optional extra, so it alone must not turn that into a 200 for consumers.
 function hasRates(entry) {
-  return RATE_KEYS.some((key) => Number.isFinite(entry[key]) && entry[key] > 0);
+  return CORE_RATE_KEYS.some((key) => Number.isFinite(entry[key]) && entry[key] > 0);
 }
 
 // The Redis TTL preserves history for 30 days; it is not permission to serve
