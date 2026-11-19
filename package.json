@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Polls Venezuelan exchange rates (BCV, Tasa Euro & Binance P2P) and exposes them as JSON",
   "main": "src/index.js",
-  "packageManager": "bun@1.4.4",
+  "packageManager": "bun@1.4.5",
   "engines": {
-    "bun": ">=1.4.4"
+    "bun": ">=1.4.5"
   },
   "scripts": {
     "start": "bun src/index.js",
